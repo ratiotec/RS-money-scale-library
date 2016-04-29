@@ -49,12 +49,6 @@ namespace rt.Devices.RsScale
         public bool IsOpen => _device?.IsOpen ?? false;
 
         /// <summary>
-        /// Contains a seperate memory for coin rolls
-        /// </summary>
-        /// <returns></returns>
-        public bool ContainsRollMemory => _protocolVersion == 5 || _protocolVersion == 6;
-
-        /// <summary>
         /// Opens a connected scale
         /// </summary>
         /// <returns></returns>
@@ -126,7 +120,7 @@ namespace rt.Devices.RsScale
         /// </summary>
         /// <param name="timeout">milliseconds</param>c
         public void Close(int timeout) => CloseAsync(timeout).RunTaskSynchronously();
-        
+
         /// <summary>
         /// Gets the currency name as three letter ISO code
         /// </summary>
@@ -150,9 +144,6 @@ namespace rt.Devices.RsScale
 
             if (currencyIndex < 0 || currencyIndex > MaxCurrencies)
                 throw new ArgumentException($"Currency currencyIndex has to be between 0-{MaxCurrencies}.");
-
-            //if (currencyIndex == 0)
-            //    currencyIndex = await GetCurrentCurrencyPositionAsync(timeout);
 
             var currencyName = new StringBuilder();
             for (byte i = 1; i <= 3; i++)
@@ -206,11 +197,8 @@ namespace rt.Devices.RsScale
             if (!IsOpen)
                 throw new InvalidOperationException("No RS scale connection opened.");
 
-            if (currencyIndex < 0 || currencyIndex > MaxCurrencies + 1)
-                throw new ArgumentException($"Currency currencyIndex has to be between 0-{MaxCurrencies + 1}.");
-
-            if (currencyIndex == MaxCurrencies + 1 && _protocolVersion < 6)
-                throw new ArgumentException($"{MaxCurrencies + 1} currencyIndex is not available.");
+            if (currencyIndex < 0 || currencyIndex > MaxCurrencies)
+                throw new ArgumentException($"Currency currencyIndex has to be between 0-{MaxCurrencies}.");
 
             if (string.IsNullOrEmpty(name) || name.Length != 3)
                 throw new ArgumentException("New currencyIndex name has to be 3 character in size.");
@@ -247,16 +235,16 @@ namespace rt.Devices.RsScale
         /// Gets a list with measured denomination details for the current currency
         /// </summary>
         /// <returns></returns>
-        public async Task<IList<ScaleMeasurement>> GetValuesAsync() => await GetValuesAsync(Timeout);
+        public async Task<IList<AccountingItem>> GetAccountingValuesAsync() => await GetAccountingValuesAsync(Timeout);
 
         /// <summary>
         /// Gets a list with measured denomination details for the current currency
         /// </summary>
         /// <param name="timeout">milliseconds</param>
         /// <returns></returns>
-        public async Task<IList<ScaleMeasurement>> GetValuesAsync(int timeout)
+        public async Task<IList<AccountingItem>> GetAccountingValuesAsync(int timeout)
         {
-            return await GetValuesAsync(0, timeout);
+            return await GetAccountingValuesAsync(0, timeout);
         }
 
         /// <summary>
@@ -265,7 +253,7 @@ namespace rt.Devices.RsScale
         /// <param name="currencyIndex">0: current currency, 1: first currency, 2: second currency, 3: third currency</param>
         /// <param name="timeout">milliseconds</param>
         /// <returns></returns>
-        public async Task<IList<ScaleMeasurement>> GetValuesAsync(int currencyIndex, int timeout)
+        public async Task<IList<AccountingItem>> GetAccountingValuesAsync(int currencyIndex, int timeout)
         {
             if (!IsConnected)
                 throw new InvalidOperationException("RS scale is not connected.");
@@ -276,7 +264,7 @@ namespace rt.Devices.RsScale
             if (currencyIndex < 0 || currencyIndex > MaxCurrencies)
                 throw new ArgumentException($"Currency currencyIndex has to be between 0-{MaxCurrencies}.");
 
-            var results = new List<ScaleMeasurement>();
+            var results = new List<AccountingItem>();
             int currentValue;
             byte denominationIndex = 0;
 
@@ -286,37 +274,63 @@ namespace rt.Devices.RsScale
             do
             {
                 // Get current denominationIndex value
-                byte[] denominationValueCommand = { 0xfb, 0x0, 0x55, 0xaa, 0x55, 0xaa };
-                denominationValueCommand[1] = (byte)((currencyIndex << 6) | ++denominationIndex); // currencyIndex + current denominationIndex
-                var receiveBufferDenominationValue = await SendPacketAsync(denominationValueCommand, timeout);
-                byte[] valueBuffer = { receiveBufferDenominationValue[5], receiveBufferDenominationValue[4], receiveBufferDenominationValue[3], receiveBufferDenominationValue[2] };
-                currentValue = BitConverter.ToInt32(valueBuffer, 0);
+                byte[] valueCommand = { 0xfb, 0x0, 0x55, 0xaa, 0x55, 0xaa };
+                valueCommand[1] = (byte)((currencyIndex << 6) | ++denominationIndex); // currencyIndex + current denominationIndex
+                var valueBuffer = await SendPacketAsync(valueCommand, timeout);
+                byte[] reducedValueBuffer = { valueBuffer[5], valueBuffer[4], valueBuffer[3], valueBuffer[2] };
+                currentValue = BitConverter.ToInt32(reducedValueBuffer, 0);
 
                 // No more denominations exist
                 if (currentValue <= 0)
                     break;
 
                 // Get current denominationIndex weight
-                byte[] denominationWeightCommand = { 0xfa, (byte)currencyIndex, denominationIndex, 0xaa, 0x55, 0xaa };
-                var receiveBufferDenominationWeight = await SendPacketAsync(denominationWeightCommand, timeout);
+                byte[] weightCommand = { 0xfa, (byte)currencyIndex, denominationIndex, 0xaa, 0x55, 0xaa };
+                var weightBuffer = await SendPacketAsync(weightCommand, timeout);
+                byte[] reducedWeightBuffer = { weightBuffer[5], weightBuffer[4], weightBuffer[3], 0x0 };
+                reducedWeightBuffer[2] = reducedWeightBuffer[2] >= 128 ? (byte)(reducedWeightBuffer[2] - 128) : reducedWeightBuffer[2];
+                var currentWeight = Convert.ToDouble(BitConverter.ToInt32(reducedWeightBuffer.ToArray(), 0) * 0.0001);
 
-                byte[] weightBuffer = { receiveBufferDenominationWeight[5], receiveBufferDenominationWeight[4], receiveBufferDenominationWeight[3], 0x0 };
-                weightBuffer[2] = weightBuffer[2] >= 128 ? (byte)(weightBuffer[2] - 128) : weightBuffer[2];
-                var currentWeight = Convert.ToDouble(BitConverter.ToInt32(weightBuffer.ToArray(), 0) * 0.0001);
-
+                // No more denominations exist
                 if (currentWeight <= 0)
                     break;
 
                 // Get current denominationIndex quantity
-                byte[] denominationQtyCommand = { 0xf9, (byte)(denominationIndex + 0x40), 0x55, 0xaa, 0x55, 0xaa };
-                var receiveBufferDenominationQty = await SendPacketAsync(denominationQtyCommand, timeout);
-                byte[] qtyBuffer = { receiveBufferDenominationQty[5], receiveBufferDenominationQty[4], receiveBufferDenominationQty[3], receiveBufferDenominationQty[2] };
-                var currentQty = BitConverter.ToInt32(qtyBuffer, 0);
+                byte[] qtyCommand = { 0xf9, (byte)(denominationIndex + 0x40), 0x55, 0xaa, 0x55, 0xaa };
+                var qtyBuffer = await SendPacketAsync(qtyCommand, timeout);
+                byte[] reducedQtyBuffer = { qtyBuffer[5], qtyBuffer[4], qtyBuffer[3], qtyBuffer[2] };
+                var currentQty = BitConverter.ToInt32(reducedQtyBuffer, 0);
 
                 // Get current denominationIndex type
                 var currentCashType = await GetCashTypeAsync(currencyIndex, denominationIndex, timeout);
-                results.Add(new ScaleMeasurement { Denomination = currentValue, Weight = currentWeight, Quantity = currentQty, CashType = currentCashType });
+
+                // Add Accounting details
+                results.Add(new AccountingItem { Denomination = currentValue, Weight = currentWeight, Quantity = currentQty, CashType = currentCashType });
+
+                try
+                {
+                    // Determine coin roll quantities if available
+                    if (currentCashType == CashType.Coin)
+                    {
+                        byte[] rollQtyCommand = { 0xf9, (byte)((3 << 6) | denominationIndex), 0x55, 0xaa, 0x55, 0xaa };
+                        var rollQtyBuffer = await SendPacketAsync(rollQtyCommand, 1000);
+                        byte[] reducedRollQtyBuffer = { rollQtyBuffer[5], rollQtyBuffer[4], rollQtyBuffer[3], rollQtyBuffer[2] };
+                        var currentRollQty = BitConverter.ToInt32(reducedRollQtyBuffer, 0);
+
+                        // Add Accounting details for coin roll
+                        results.Add(new AccountingItem { Denomination = currentValue, Weight = currentWeight, Quantity = currentRollQty, CashType = CashType.CoinRoll });
+                    }
+                }
+                catch (Exception)
+                {
+                    // Coin roll feature not supported
+                }
             } while (currentValue > 0);
+
+            // Remove empty coin roll items when not using seperated coin roll feature
+            var hasMergedRollQty = results.Where(x => x.CashType == CashType.CoinRoll)?.All(x => x.Quantity == 0);
+            if (hasMergedRollQty.HasValue && hasMergedRollQty.Value)
+                results.RemoveAll(x => x.CashType == CashType.CoinRoll);
 
             return results;
         }
@@ -325,14 +339,14 @@ namespace rt.Devices.RsScale
         /// Gets a list with measured denomination details for the current currency
         /// </summary>
         /// <returns></returns>
-        public IList<ScaleMeasurement> GetValues() => GetValues(Timeout);
+        public IList<AccountingItem> GetAccountingValues() => GetAccountingValues(Timeout);
 
         /// <summary>
         /// Gets a list with measured denomination details for the current currency
         /// </summary>
         /// <param name="timeout">milliseconds</param>
         /// <returns></returns>
-        public IList<ScaleMeasurement> GetValues(int timeout) => GetValues(0, timeout);
+        public IList<AccountingItem> GetAccountingValues(int timeout) => GetAccountingValues(0, timeout);
 
         /// <summary>
         /// Gets a list with measured denomination details for the current currency
@@ -340,7 +354,7 @@ namespace rt.Devices.RsScale
         /// <param name="currencyIndex">0: current currency, 1: first currency, 2: second currency, 3: third currency</param>
         /// <param name="timeout">milliseconds</param>
         /// <returns></returns>
-        public IList<ScaleMeasurement> GetValues(int currencyIndex, int timeout) => GetValuesAsync(currencyIndex, timeout).RunTaskSynchronously();
+        public IList<AccountingItem> GetAccountingValues(int currencyIndex, int timeout) => GetAccountingValuesAsync(currencyIndex, timeout).RunTaskSynchronously();
 
         /// <summary>
         /// Removes a denomination from currency
@@ -371,7 +385,7 @@ namespace rt.Devices.RsScale
             if (currencyIndex == 0)
                 currencyIndex = await GetCurrentCurrencyPositionAsync(timeout);
 
-            var values = await GetValuesAsync(currencyIndex, timeout);
+            var values = await GetAccountingValuesAsync(currencyIndex, timeout);
             for (var i = denominationIndex; i < values.Count - 1; i++)
             {
                 var type = values[i + 1].CashType;
@@ -493,11 +507,8 @@ namespace rt.Devices.RsScale
             if (!IsOpen)
                 throw new InvalidOperationException("No RS scale connection opened.");
 
-            if (currencyIndex < 0 || currencyIndex > MaxCurrencies + 1)
-                throw new ArgumentException($"Currency currencyIndex has to be between 0-{MaxCurrencies + 1}.");
-
-            if (currencyIndex == MaxCurrencies + 1 && _protocolVersion < 6)
-                throw new ArgumentException($"{MaxCurrencies + 1} currencyIndex is not available.");
+            if (currencyIndex < 0 || currencyIndex > MaxCurrencies)
+                throw new ArgumentException($"Currency currencyIndex has to be between 0-{MaxCurrencies}.");
 
             if (currencyIndex == 0)
                 currencyIndex = await GetCurrentCurrencyPositionAsync(timeout);
@@ -685,7 +696,7 @@ namespace rt.Devices.RsScale
         /// <param name="timeout">milliseconds</param>
         /// <returns></returns>
         public double GetWeight(int timeout) => GetWeightAsync(timeout).RunTaskSynchronously();
-        
+
         /// <summary>
         /// Gets the current float value
         /// </summary>
@@ -710,7 +721,7 @@ namespace rt.Devices.RsScale
             }
 
             // received float factor
-            var denominationValues = await GetValuesAsync(0);
+            var denominationValues = await GetAccountingValuesAsync(0);
             var minBanknoteValue = denominationValues.Where(x => x.CashType == CashType.Banknote).Min(x => x.Denomination);
             var floatFactor = floatSettings[0];
 
@@ -996,7 +1007,7 @@ namespace rt.Devices.RsScale
             {
                 if (disposing)
                 {
-                    //Close();
+                    Close();
                 }
 
                 disposedValue = true;
