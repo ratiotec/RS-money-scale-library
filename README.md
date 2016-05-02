@@ -21,7 +21,7 @@ You can clone this repository and compile it with VS 2015. Further you find the 
 You need a installed framework version 4.5 to run the library properly. At the moment we do not support .NET 4.0 (or lower) any longer. If you have the requirement to run .NET 4.0 only you should be able to use Microsoft's upgrade package [Microsoft.Bcl.Async] to support task operations.
 ## Technical support
 Feel free to create new issues as feature request or bug reports in this repository.
-There are also samples in the included wiki pages.
+There are also samples in the included [wiki pages].
 ## License
 [MIT]
 
@@ -29,3 +29,4 @@ There are also samples in the included wiki pages.
 [Microsoft.Bcl.Async]: <https://www.nuget.org/packages/Microsoft.Bcl.Async>
 [MIT]: <https://opensource.org/licenses/MIT>
 [Build-output]: <https://github.com/ratiotec/RS-money-scale-library/tree/master/Build-output>
+[wiki pages]: <https://github.com/ratiotec/RS-money-scale-library/wiki>
