@@ -485,21 +485,21 @@ namespace rt.Devices.RsScale
         /// </summary>
         /// <param name="currencyIndex">0: current currency, 1: first currency, 2: second currency, 3: third currency</param>
         /// <param name="denominationIndex">index of the denomination (0 to n-1)</param>
-        /// <param name="value">new denomination weight</param>
+        /// <param name="newWeight">new denomination weight</param>
         /// <param name="cashType">type of denomination</param>
         /// <returns></returns>
-        public async Task SetDenominationWeightAsync(int currencyIndex, int denominationIndex, double value, CashType cashType) => await SetDenominationWeightAsync(currencyIndex, denominationIndex, value, cashType, Timeout);
+        public async Task SetDenominationWeightAsync(int currencyIndex, int denominationIndex, double newWeight, CashType cashType) => await SetDenominationWeightAsync(currencyIndex, denominationIndex, newWeight, cashType, Timeout);
 
         /// <summary>
         /// Sets the coin or banknote weight for a denomination
         /// </summary>
         /// <param name="currencyIndex">0: current currency, 1: first currency, 2: second currency, 3: third currency</param>
         /// <param name="denominationIndex">index of the denomination (0 to n-1)</param>
-        /// <param name="value">new denomination weight</param>
+        /// <param name="newWeight">new denomination weight</param>
         /// <param name="cashType">type of denomination</param>
         /// <param name="timeout">milliseconds</param>
         /// <returns></returns>
-        public async Task SetDenominationWeightAsync(int currencyIndex, int denominationIndex, double value, CashType cashType, int timeout)
+        public async Task SetDenominationWeightAsync(int currencyIndex, int denominationIndex, double newWeight, CashType cashType, int timeout)
         {
             if (!IsConnected)
                 throw new InvalidOperationException("RS scale is not connected.");
@@ -513,7 +513,7 @@ namespace rt.Devices.RsScale
             if (currencyIndex == 0)
                 currencyIndex = await GetCurrentCurrencyPositionAsync(timeout);
 
-            var weight = BitConverter.GetBytes(Convert.ToInt32(value * 10000));
+            var weight = BitConverter.GetBytes(Convert.ToInt32(newWeight * 10000));
             byte[] weightCommand = { 0xfd, (byte)currencyIndex, (byte)(denominationIndex + 1), (byte)(weight[2] + (byte)cashType), weight[1], weight[0] };
 
             // set denominationIndex
@@ -529,59 +529,22 @@ namespace rt.Devices.RsScale
         /// </summary>
         /// <param name="currencyIndex">0: current currency, 1: first currency, 2: second currency, 3: third currency</param>
         /// <param name="denominationIndex">index of the denomination (0 to n-1)</param>
-        /// <param name="value">new denomination weight</param>
+        /// <param name="newWeight">new denomination weight</param>
         /// <param name="cashType">type of denomination</param>
         /// <returns></returns>
-        public void SetDenominationWeight(int currencyIndex, int denominationIndex, double value, CashType cashType) => SetDenominationWeight(currencyIndex, denominationIndex, value, cashType, Timeout);
+        public void SetDenominationWeight(int currencyIndex, int denominationIndex, double newWeight, CashType cashType) => SetDenominationWeight(currencyIndex, denominationIndex, newWeight, cashType, Timeout);
 
         /// <summary>
         /// Sets the coin or banknote weight for a denomination
         /// </summary>
         /// <param name="currencyIndex">0: current currency, 1: first currency, 2: second currency, 3: third currency</param>
         /// <param name="denominationIndex">index of the denomination (0 to n-1)</param>
-        /// <param name="value">new denomination weight</param>
+        /// <param name="newWeight">new denomination weight</param>
         /// <param name="cashType">type of denomination</param>
         /// <param name="timeout">milliseconds</param>
         /// <returns></returns>
-        public void SetDenominationWeight(int currencyIndex, int denominationIndex, double value, CashType cashType, int timeout) => SetDenominationWeightAsync(currencyIndex, denominationIndex, value, cashType, Timeout).RunTaskSynchronously();
-
-        /// <summary>
-        /// Clears the denomination text (RS 2000 devices only)
-        /// </summary>
-        /// <param name="currencyIndex">0: current currency, 1: first currency, 2: second currency, 3: third currency</param>
-        /// <param name="denominationIndex">index of the denomination (0 to n-1)</param>
-        /// <returns></returns>
-        public async Task ClearDenomionationTextAsync(int currencyIndex, int denominationIndex) => await ClearDenomionationTextAsync(currencyIndex, denominationIndex, Timeout);
-
-        /// <summary>
-        /// Clears the denomination text (RS 2000 devices only)
-        /// </summary>
-        /// <param name="currencyIndex">0: current currency, 1: first currency, 2: second currency, 3: third currency</param>
-        /// <param name="denominationIndex">index of the denomination (0 to n-1)</param>
-        /// <param name="timeout">milliseconds</param>
-        /// <returns></returns>
-        public async Task ClearDenomionationTextAsync(int currencyIndex, int denominationIndex, int timeout)
-        {
-            await SetDenomionationTextAsync(currencyIndex, denominationIndex, string.Empty, timeout);
-        }
-
-        /// <summary>
-        /// Clears the denomination text (RS 2000 devices only)
-        /// </summary>
-        /// <param name="currencyIndex">0: current currency, 1: first currency, 2: second currency, 3: third currency</param>
-        /// <param name="denominationIndex">index of the denomination (0 to n-1)</param>
-        /// <returns></returns>
-        public void ClearDenomionationText(int currencyIndex, int denominationIndex) => ClearDenomionationText(currencyIndex, denominationIndex, Timeout);
-
-        /// <summary>
-        /// Clears the denomination text (RS 2000 devices only)
-        /// </summary>
-        /// <param name="currencyIndex">0: current currency, 1: first currency, 2: second currency, 3: third currency</param>
-        /// <param name="denominationIndex">index of the denomination (0 to n-1)</param>
-        /// <param name="timeout">milliseconds</param>
-        /// <returns></returns>
-        public void ClearDenomionationText(int currencyIndex, int denominationIndex, int timeout) => ClearDenomionationTextAsync(currencyIndex, denominationIndex, timeout).RunTaskSynchronously();
-
+        public void SetDenominationWeight(int currencyIndex, int denominationIndex, double newWeight, CashType cashType, int timeout) => SetDenominationWeightAsync(currencyIndex, denominationIndex, newWeight, cashType, Timeout).RunTaskSynchronously();
+        
         /// <summary>
         /// Sets a 8-letter denomination text (RS 2000 devices only)
         /// </summary>
