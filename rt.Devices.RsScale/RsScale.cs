@@ -544,7 +544,7 @@ namespace rt.Devices.RsScale
         /// <param name="timeout">milliseconds</param>
         /// <returns></returns>
         public void SetDenominationWeight(int currencyIndex, int denominationIndex, double newWeight, CashType cashType, int timeout) => SetDenominationWeightAsync(currencyIndex, denominationIndex, newWeight, cashType, Timeout).RunTaskSynchronously();
-        
+
         /// <summary>
         /// Sets a 8-letter denomination text (RS 2000 devices only)
         /// </summary>
@@ -734,6 +734,427 @@ namespace rt.Devices.RsScale
         /// <returns></returns>
         public bool GetFloatStatus(int timeout) => GetFloatStatusAsync(timeout).RunTaskSynchronously();
 
+        /// <summary>
+        /// Enable or disable the Auto-Add feature
+        /// </summary>
+        /// <param name="on">Enable or disable</param>
+        /// <returns></returns>
+        public async Task SetAutoAddAsync(bool on) => await SetAutoAddAsync(on, Timeout);
+
+        /// <summary>
+        /// Enable or disable the Auto-Add feature
+        /// </summary>
+        /// <param name="on">Enable or disable</param>
+        /// <param name="timeout">milliseconds</param>
+        /// <returns></returns>
+        public async Task SetAutoAddAsync(bool on, int timeout)
+        {
+            var autoAddCommand = new byte[] { 0xdf, (on ? (byte)0x01 : (byte)0x00), 0x55, 0xaa, 0x55, 0xaa };
+            await SendPacketAsync(autoAddCommand, timeout);
+        }
+
+        /// <summary>
+        /// Enable or disable the Auto-Add feature
+        /// </summary>
+        /// <param name="on">Enable or disable</param>
+        public void SetAutoAdd(bool on) => SetAutoAdd(on, Timeout);
+
+        /// <summary>
+        /// Enable or disable the Auto-Add feature
+        /// </summary>
+        /// <param name="on">Enable or disable</param>
+        /// <param name="timeout">milliseconds</param>
+        public void SetAutoAdd(bool on, int timeout) => SetAutoAddAsync(on, timeout).RunTaskSynchronously();
+
+        /// <summary>
+        /// Get the Auto-Add status indication (on/off)
+        /// </summary>
+        /// <returns></returns>
+        public async Task<bool> GetAutoAddStatusAsync() => await GetAutoAddStatusAsync(Timeout);
+
+        /// <summary>
+        /// Get the Auto-Add status indication (on/off)
+        /// </summary>
+        /// <param name="timeout">milliseconds</param>
+        /// <returns></returns>
+        public async Task<bool> GetAutoAddStatusAsync(int timeout)
+        {
+            var autoAddCommand = new byte[] { 0xde, 0xaa, 0x55, 0xaa, 0x55, 0xaa };
+            var receiveBuffer = await SendPacketAsync(autoAddCommand, timeout);
+
+            return receiveBuffer[1] == 1;
+        }
+
+        /// <summary>
+        /// Get the Auto-Add status indication (on/off)
+        /// </summary>
+        /// <returns></returns>
+        public bool GetAutoAddStatus() => GetAutoAddStatus(Timeout);
+
+        /// <summary>
+        /// Get the Auto-Add status indication (on/off)
+        /// </summary>
+        /// <param name="timeout">milliseconds</param>
+        /// <returns></returns>
+        public bool GetAutoAddStatus(int timeout) => GetAutoAddStatusAsync(timeout).RunTaskSynchronously();
+
+        /// <summary>
+        /// Enable or disable the Auto-Continue feature
+        /// </summary>
+        /// <param name="on">Enable or disable</param>
+        /// <returns></returns>
+        public async Task SetAutoContinueAsync(bool on) => await SetAutoContinueAsync(on, Timeout);
+
+        /// <summary>
+        /// Enable or disable the Auto-Continue feature
+        /// </summary>
+        /// <param name="on">Enable or disable</param>
+        /// <param name="timeout">milliseconds</param>
+        /// <returns></returns>
+        public async Task SetAutoContinueAsync(bool on, int timeout)
+        {
+            var autoAddCommand = new byte[] { 0xdd, (on ? (byte)0x01 : (byte)0x00), 0x55, 0xaa, 0x55, 0xaa };
+            await SendPacketAsync(autoAddCommand, timeout);
+        }
+
+        /// <summary>
+        /// Enable or disable the Auto-Continue feature
+        /// </summary>
+        /// <param name="on">Enable or disable</param>
+        public void SetAutoContinue(bool on) => SetAutoContinue(on, Timeout);
+
+        /// <summary>
+        /// Enable or disable the Auto-Continue feature
+        /// </summary>
+        /// <param name="on">Enable or disable</param>
+        /// <param name="timeout">milliseconds</param>
+        public void SetAutoContinue(bool on, int timeout) => SetAutoContinueAsync(on, timeout).RunTaskSynchronously();
+
+        /// <summary>
+        /// Get the Auto-Continue status indication (on/off)
+        /// </summary>
+        /// <returns></returns>
+        public async Task<bool> GetAutoContinueStatusAsync() => await GetAutoContinueStatusAsync(Timeout);
+
+        /// <summary>
+        /// Get the Auto-Continue status indication (on/off)
+        /// </summary>
+        /// <param name="timeout">milliseconds</param>
+        /// <returns></returns>
+        public async Task<bool> GetAutoContinueStatusAsync(int timeout)
+        {
+            var autoAddCommand = new byte[] { 0xdc, 0xaa, 0x55, 0xaa, 0x55, 0xaa };
+            var receiveBuffer = await SendPacketAsync(autoAddCommand, timeout);
+
+            return receiveBuffer[1] == 1;
+        }
+
+        /// <summary>
+        /// Get the Auto-Continue status indication (on/off)
+        /// </summary>
+        /// <returns></returns>
+        public bool GetAutoContinueStatus() => GetAutoContinueStatus(Timeout);
+
+        /// <summary>
+        /// Get the Auto-Continue status indication (on/off)
+        /// </summary>
+        /// <param name="timeout">milliseconds</param>
+        /// <returns></returns>
+        public bool GetAutoContinueStatus(int timeout) => GetAutoContinueStatusAsync(timeout).RunTaskSynchronously();
+
+        /// <summary>
+        /// Enable or disable the coin roll (package) feature
+        /// </summary>
+        /// <param name="on">Enable or disable</param>
+        /// <returns></returns>
+        public async Task SetCoinRollAsync(bool on) => await SetCoinRollAsync(on, Timeout);
+
+        /// <summary>
+        /// Enable or disable the coin roll (package) feature
+        /// </summary>
+        /// <param name="on">Enable or disable</param>
+        /// <param name="timeout">milliseconds</param>
+        /// <returns></returns>
+        public async Task SetCoinRollAsync(bool on, int timeout)
+        {
+            var coinRollCommand = new byte[] { 0xc9, (on ? (byte)0x01 : (byte)0x00), 0x55, 0xaa, 0x55, 0xaa };
+            await SendPacketAsync(coinRollCommand, timeout);
+        }
+
+        /// <summary>
+        /// Enable or disable the coin roll (package) feature
+        /// </summary>
+        /// <param name="on">Enable or disable</param>
+        public void SetCoinRoll(bool on) => SetCoinRoll(on, Timeout);
+
+        /// <summary>
+        /// Enable or disable the coin roll (package) feature
+        /// </summary>
+        /// <param name="on">Enable or disable</param>
+        /// <param name="timeout">milliseconds</param>
+        public void SetCoinRoll(bool on, int timeout) => SetCoinRollAsync(on, timeout).RunTaskSynchronously();
+
+        /// <summary>
+        /// Get the coin roll (package) status indication (on/off)
+        /// </summary>
+        /// <returns></returns>
+        public async Task<bool> GetCoinRollStatusAsync() => await GetCoinRollStatusAsync(Timeout);
+
+        /// <summary>
+        /// Get the coin roll (package) status indication (on/off)
+        /// </summary>
+        /// <param name="timeout">milliseconds</param>
+        /// <returns></returns>
+        public async Task<bool> GetCoinRollStatusAsync(int timeout)
+        {
+            var coinRollCommand = new byte[] { 0xc8, 0xaa, 0x55, 0xaa, 0x55, 0xaa };
+            var receiveBuffer = await SendPacketAsync(coinRollCommand, timeout);
+
+            return receiveBuffer[1] == 1;
+        }
+
+        /// <summary>
+        /// Get the coin roll (package) status indication (on/off)
+        /// </summary>
+        /// <returns></returns>
+        public bool GetCoinRollStatus() => GetCoinRollStatus(Timeout);
+
+        /// <summary>
+        /// Get the coin roll (package) status indication (on/off)
+        /// </summary>
+        /// <param name="timeout">milliseconds</param>
+        /// <returns></returns>
+        public bool GetCoinRollStatus(int timeout) => GetCoinRollStatusAsync(timeout).RunTaskSynchronously();
+
+        /// <summary>
+        /// Sets the profile name (RS 2000 devices only)
+        /// </summary>
+        /// <param name="name">Profile name character</param>
+        /// <returns></returns>
+        public async Task SetProfileNameAsync(char name) => await SetProfileNameAsync(name, Timeout);
+
+        /// <summary>
+        /// Sets the profile name (RS 2000 devices only)
+        /// </summary>
+        /// <param name="name">Profile name character</param>
+        /// <param name="timeout">milliseconds</param>
+        /// <returns></returns>
+        public async Task SetProfileNameAsync(char name, int timeout)
+        {
+            var letter = GetLetterCode(name.ToString());
+            
+            var profileNameCommand = new byte[] { 0xc7, letter[0], letter[1], 0xaa, 0x55, 0xaa };
+            await SendPacketAsync(profileNameCommand, timeout);
+        }
+
+        /// <summary>
+        /// Sets the profile name (RS 2000 devices only)
+        /// </summary>
+        /// <param name="name">Profile name character</param>
+        public void SetProfileName(char name) => SetProfileName(name, Timeout);
+
+        /// <summary>
+        /// Sets the profile name (RS 2000 devices only)
+        /// </summary>
+        /// <param name="name">Profile name character</param>
+        /// <param name="timeout">milliseconds</param>
+        public void SetProfileName(char name, int timeout) => SetProfileNameAsync(name, timeout).RunTaskSynchronously();
+
+        /// <summary>
+        /// Gets the profile name (RS 2000 devices only)
+        /// </summary>
+        /// <returns></returns>
+        public async Task<char> GetProfileNameAsync() => await GetProfileNameAsync(Timeout);
+
+        /// <summary>
+        /// Gets the profile name (RS 2000 devices only)
+        /// </summary>
+        /// <param name="timeout">milliseconds</param>
+        /// <returns></returns>
+        public async Task<char> GetProfileNameAsync(int timeout)
+        {
+            var profileNameCommand = new byte[] { 0xc6, 0xaa, 0x55, 0xaa, 0x55, 0xaa };
+            var receiveBuffer = await SendPacketAsync(profileNameCommand, timeout);
+            
+            return GetLetterChar(receiveBuffer[1], receiveBuffer[2]).ToUpper().FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Gets the profile name (RS 2000 devices only)
+        /// </summary>
+        /// <returns></returns>
+        public char GetProfileName() => GetProfileName(Timeout);
+
+        /// <summary>
+        /// Gets the profile name (RS 2000 devices only)
+        /// </summary>
+        /// <param name="timeout">milliseconds</param>
+        /// <returns></returns>
+        public char GetProfileName(int timeout) => GetProfileNameAsync(timeout).RunTaskSynchronously();
+
+        /// <summary>
+        /// Sets a currency as the default currency which will be loaded after a factory reset. (RS 2000 devices only)
+        /// </summary>
+        /// <param name="currencyIndex">1: first currency, 2: second currency, 3: third currency</param>
+        /// <returns></returns>
+        public async Task SetDefaultCurrencyAsync(int currencyIndex) => await SetDefaultCurrencyAsync(currencyIndex, Timeout);
+
+        /// <summary>
+        /// Sets a currency as the default currency which will be loaded after a factory reset. (RS 2000 devices only)
+        /// </summary>
+        /// <param name="currencyIndex">1: first currency, 2: second currency, 3: third currency</param>
+        /// <param name="timeout">milliseconds</param>
+        /// <returns></returns>
+        public async Task SetDefaultCurrencyAsync(int currencyIndex, int timeout)
+        {
+            if (currencyIndex < 1 || currencyIndex > MaxCurrencies)
+                throw new ArgumentException($"Currency currencyIndex has to be between 1-{MaxCurrencies}.");
+
+            currencyIndex = currencyIndex == 3 ? 4 : currencyIndex;
+            
+            var defaultCurrencyCommand = new byte[] { 0xc5, (byte)currencyIndex, 0x55, 0xaa, 0x55, 0xaa };
+            await SendPacketAsync(defaultCurrencyCommand, timeout);
+        }
+
+        /// <summary>
+        /// Sets a currency as the default currency which will be loaded after a factory reset. (RS 2000 devices only)
+        /// </summary>
+        /// <param name="currencyIndex">1: first currency, 2: second currency, 3: third currency</param>
+        public void SetDefaultCurrency(int currencyIndex) => SetDefaultCurrency(currencyIndex, Timeout);
+
+        /// <summary>
+        /// Sets a currency as the default currency which will be loaded after a factory reset. (RS 2000 devices only)
+        /// </summary>
+        /// <param name="currencyIndex">1: first currency, 2: second currency, 3: third currency</param>
+        /// <param name="timeout">milliseconds</param>
+        public void SetDefaultCurrency(int currencyIndex, int timeout) => SetDefaultCurrencyAsync(currencyIndex, timeout).RunTaskSynchronously();
+
+        /// <summary>
+        /// Load the factory default settings.
+        /// </summary>
+        /// <returns></returns>
+        public async Task LoadFactoryDefaultsAsync() => await LoadFactoryDefaultsAsync(Timeout);
+
+        /// <summary>
+        /// Load the factory default settings.
+        /// </summary>
+        /// <param name="timeout">milliseconds</param>
+        /// <returns></returns>
+        public async Task LoadFactoryDefaultsAsync(int timeout)
+        {
+            var factoryDefaultsCommand = new byte[] { 0xd5, 0xaa, 0x55, 0xaa, 0x55, 0xaa };
+            await SendPacketAsync(factoryDefaultsCommand, timeout);
+        }
+
+        /// <summary>
+        /// Load the factory default settings.
+        /// </summary>
+        public void LoadFactoryDefaults() => LoadFactoryDefaults(Timeout);
+
+        /// <summary>
+        /// Load the factory default settings.
+        /// </summary>
+        /// <param name="timeout">milliseconds</param>
+        public void LoadFactoryDefaults(int timeout) => LoadFactoryDefaultsAsync(timeout).RunTaskSynchronously();
+
+        /// <summary>
+        /// Sets the paper weight and the coin quantity for a single coin roll. (RS 2000 devices only)
+        /// </summary>
+        /// <param name="currencyIndex">1: first currency, 2: second currency, 3: third currency</param>
+        /// <param name="denominationIndex">index of the denomination (0 to n-1)</param>
+        /// <param name="quantity">coin quantity</param>
+        /// <param name="paperWeight">weight of the coin roll paper</param>
+        /// <returns></returns>
+        public async Task SetCoinRollDataAsync(int currencyIndex, int denominationIndex, int quantity, double paperWeight) => await SetCoinRollDataAsync(currencyIndex, denominationIndex, quantity, paperWeight, Timeout);
+
+        /// <summary>
+        /// Sets the paper weight and the coin quantity for a single coin roll. (RS 2000 devices only)
+        /// </summary>
+        /// <param name="currencyIndex">1: first currency, 2: second currency, 3: third currency</param>
+        /// <param name="denominationIndex">index of the denomination (0 to n-1)</param>
+        /// <param name="quantity">coin quantity</param>
+        /// <param name="paperWeight">weight of the coin roll paper</param>
+        /// <param name="timeout">milliseconds</param>
+        /// <returns></returns>
+        public async Task SetCoinRollDataAsync(int currencyIndex, int denominationIndex, int quantity, double paperWeight, int timeout)
+        {
+            if (currencyIndex < 1 || currencyIndex > MaxCurrencies)
+                throw new ArgumentException($"Currency currencyIndex has to be between 1-{MaxCurrencies}.");
+            
+            if (quantity < 0 || quantity > 255)
+                throw new ArgumentException($"Quantity has to be between 0-255.");
+
+            var weight = BitConverter.GetBytes(Convert.ToInt32(paperWeight * 10000));
+            byte[] coinRollDataCommand = { 0xcb, (byte)currencyIndex, (byte)(denominationIndex + 1), (byte)quantity, weight[1], weight[0] };
+            await SendPacketAsync(coinRollDataCommand, timeout);
+        }
+
+        /// <summary>
+        /// Sets the paper weight and the coin quantity for a single coin roll. (RS 2000 devices only)
+        /// </summary>
+        /// <param name="currencyIndex">1: first currency, 2: second currency, 3: third currency</param>
+        /// <param name="denominationIndex">index of the denomination (0 to n-1)</param>
+        /// <param name="quantity">coin quantity</param>
+        /// <param name="paperWeight">weight of the coin roll paper</param>
+        public void SetCoinRollData(int currencyIndex, int denominationIndex, int quantity, double paperWeight) => SetCoinRollData(currencyIndex, denominationIndex, quantity, paperWeight, Timeout);
+
+        /// <summary>
+        /// Sets the paper weight and the coin quantity for a single coin roll. (RS 2000 devices only)
+        /// </summary>
+        /// <param name="currencyIndex">1: first currency, 2: second currency, 3: third currency</param>
+        /// <param name="denominationIndex">index of the denomination (0 to n-1)</param>
+        /// <param name="quantity">coin quantity</param>
+        /// <param name="paperWeight">weight of the coin roll paper</param>
+        /// <param name="timeout">milliseconds</param>
+        public void SetCoinRollData(int currencyIndex, int denominationIndex, int quantity, double paperWeight, int timeout) => SetCoinRollDataAsync(currencyIndex, denominationIndex, quantity, paperWeight, timeout).RunTaskSynchronously();
+
+        /// <summary>
+        /// Gets a configuration record containing the coin quantity and paper weight for a coin roll for the given currency/denomination. (RS 2000 devices only)
+        /// </summary>
+        /// <param name="currencyIndex">1: first currency, 2: second currency, 3: third currency</param>
+        /// <param name="denominationIndex">index of the denomination (0 to n-1)</param>
+        /// <returns></returns>
+        public async Task<CoinRollData> GetCoinRollDataAsync(int currencyIndex, int denominationIndex) => await GetCoinRollDataAsync(currencyIndex, denominationIndex, Timeout);
+
+        /// <summary>
+        /// Gets a configuration record containing the coin quantity and paper weight for a coin roll for the given currency/denomination. (RS 2000 devices only)
+        /// </summary>
+        /// <param name="currencyIndex">1: first currency, 2: second currency, 3: third currency</param>
+        /// <param name="denominationIndex">index of the denomination (0 to n-1)</param>
+        /// <param name="timeout">milliseconds</param>
+        /// <returns></returns>
+        public async Task<CoinRollData> GetCoinRollDataAsync(int currencyIndex, int denominationIndex, int timeout)
+        {
+            if (currencyIndex < 1 || currencyIndex > MaxCurrencies)
+                throw new ArgumentException($"Currency currencyIndex has to be between 1-{MaxCurrencies}.");
+
+
+            byte[] coinRollDataCommand = { 0xca, (byte)currencyIndex, (byte)(denominationIndex + 1), 0xaa, 0x55, 0xaa };
+            var receiveBuffer = await SendPacketAsync(coinRollDataCommand, timeout);
+            
+            var weight = Convert.ToDouble(BitConverter.ToUInt16(new byte[] { receiveBuffer[5], receiveBuffer[4] }, 0)) * Math.Pow(10, -4);
+            var result = new CoinRollData { Quantity = receiveBuffer[3], PaperWeight = weight };
+            
+            return result;
+        }
+
+        /// <summary>
+        /// Gets a configuration record containing the coin quantity and paper weight for a coin roll for the given currency/denomination. (RS 2000 devices only)
+        /// </summary>
+        /// <param name="currencyIndex">1: first currency, 2: second currency, 3: third currency</param>
+        /// <param name="denominationIndex">index of the denomination (0 to n-1)</param>
+        /// <returns></returns>
+        public CoinRollData GetCoinRollData(int currencyIndex, int denominationIndex) => GetCoinRollData(currencyIndex, denominationIndex, Timeout);
+
+        /// <summary>
+        /// Gets a configuration record containing the coin quantity and paper weight for a coin roll for the given currency/denomination. (RS 2000 devices only)
+        /// </summary>
+        /// <param name="currencyIndex">1: first currency, 2: second currency, 3: third currency</param>
+        /// <param name="denominationIndex">index of the denomination (0 to n-1)</param>
+        /// <param name="timeout">milliseconds</param>
+        /// <returns></returns>
+        public CoinRollData GetCoinRollData(int currencyIndex, int denominationIndex, int timeout) => GetCoinRollDataAsync(currencyIndex, denominationIndex, timeout).RunTaskSynchronously();
+        
         /// <summary>
         /// Gets the scale protocol version
         /// </summary>

@@ -52,6 +52,7 @@
     <Compile Include="RsScale.cs" />
     <Compile Include="Types\CashType.cs" />
     <Compile Include="Types\AccountingItem.cs" />
+    <Compile Include="Types\CoinRollData.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Assemblies\rt.Hid.v2.dll" />
