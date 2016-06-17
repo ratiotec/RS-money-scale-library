@@ -2,7 +2,7 @@
 ### About
 A communication library for RS money scale devices written in C#. It supports RS 1000, 1200 and 2000 devices. The library supports task-based asynchronous and classic synchronous operations to receive accounting informations.
 ## Version
-1.0.2
+1.1.0
 ## Usage
 The library consists of two files:
   - rt.Devices.RsScale.dll
