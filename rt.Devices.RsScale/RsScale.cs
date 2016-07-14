@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using rt.Devices.RsScale.ExtensionsMethods;
+using System.Diagnostics;
 
 namespace rt.Devices.RsScale
 {
@@ -210,6 +211,11 @@ namespace rt.Devices.RsScale
             {
                 var letter = GetLetterCode(name[i].ToString());
                 var nameCommand = new byte[] { 0xff, (byte)currencyIndex, (byte)(i + 1), letter[0], letter[1], 0xaa };
+                
+                await SendPacketAsync(nameCommand, timeout);
+
+                // Set factory-reset memory
+                nameCommand[0] = 0xef;
                 await SendPacketAsync(nameCommand, timeout);
             }
         }
@@ -576,8 +582,27 @@ namespace rt.Devices.RsScale
             if (currencyIndex == 0)
                 currencyIndex = await GetCurrentCurrencyPositionAsync(timeout);
 
+            byte[] textCommand = { 0xbb, 0x00, 0x00, 0x00, 0x00, 0xaa };
+            textCommand[1] = (byte)((currencyIndex << 6) | ++denominationIndex);
+
             if (string.IsNullOrEmpty(text))
-                text = "        ";
+            {
+                for (byte digitIndex = 1; digitIndex <= 8; digitIndex++)
+                {
+                    textCommand[2] = digitIndex;
+                    textCommand[3] = 0x01;
+                    textCommand[4] = 0x01;
+
+                    await SendPacketAsync(textCommand, timeout);
+
+                    // set factory-reset memory
+                    var resetCommand = new byte[textCommand.Length];
+                    textCommand.CopyTo(resetCommand, 0);
+                    resetCommand[0] = 0xed;
+                    await SendPacketAsync(textCommand, timeout);
+                    return;
+                }
+            }
 
             if (text.Length < 8)
             {
@@ -586,13 +611,13 @@ namespace rt.Devices.RsScale
                     text += " ";
             }
 
-            byte[] textCommand = { 0xbb, 0x00, 0x00, 0x00, 0x00, 0xaa };
-            textCommand[1] = (byte)((currencyIndex << 6) | ++denominationIndex);
-            if (text.Length > 8) text = text.Substring(0, 8);
+            if (text.Length > 8)
+                text = text.Substring(0, 8);
+
             for (byte digitIndex = 1; digitIndex <= 8; digitIndex++)
             {
                 textCommand[2] = digitIndex;
-                var letter = digitIndex > text.Length ? new byte[] { 0x01, 0x01 } : GetLetterCode(text.Substring(digitIndex - 1, 1));
+                var letter = GetLetterCode(text.Substring(digitIndex - 1, 1));
                 textCommand[3] = letter[0];
                 textCommand[4] = letter[1];
 
@@ -942,7 +967,7 @@ namespace rt.Devices.RsScale
         public async Task SetProfileNameAsync(char name, int timeout)
         {
             var letter = GetLetterCode(name.ToString());
-            
+
             var profileNameCommand = new byte[] { 0xc7, letter[0], letter[1], 0xaa, 0x55, 0xaa };
             await SendPacketAsync(profileNameCommand, timeout);
         }
@@ -975,7 +1000,7 @@ namespace rt.Devices.RsScale
         {
             var profileNameCommand = new byte[] { 0xc6, 0xaa, 0x55, 0xaa, 0x55, 0xaa };
             var receiveBuffer = await SendPacketAsync(profileNameCommand, timeout);
-            
+
             return GetLetterChar(receiveBuffer[1], receiveBuffer[2]).ToUpper().FirstOrDefault();
         }
 
@@ -1011,7 +1036,7 @@ namespace rt.Devices.RsScale
                 throw new ArgumentException($"Currency currencyIndex has to be between 1-{MaxCurrencies}.");
 
             currencyIndex = currencyIndex == 3 ? 4 : currencyIndex;
-            
+
             var defaultCurrencyCommand = new byte[] { 0xc5, (byte)currencyIndex, 0x55, 0xaa, 0x55, 0xaa };
             await SendPacketAsync(defaultCurrencyCommand, timeout);
         }
@@ -1080,12 +1105,13 @@ namespace rt.Devices.RsScale
         {
             if (currencyIndex < 1 || currencyIndex > MaxCurrencies)
                 throw new ArgumentException($"Currency currencyIndex has to be between 1-{MaxCurrencies}.");
-            
+
             if (quantity < 0 || quantity > 255)
                 throw new ArgumentException($"Quantity has to be between 0-255.");
 
-            var weight = BitConverter.GetBytes(Convert.ToInt32(paperWeight * 10000));
+            var weight = BitConverter.GetBytes(Convert.ToInt32(paperWeight * 10));
             byte[] coinRollDataCommand = { 0xcb, (byte)currencyIndex, (byte)(denominationIndex + 1), (byte)quantity, weight[1], weight[0] };
+
             await SendPacketAsync(coinRollDataCommand, timeout);
         }
 
@@ -1131,10 +1157,9 @@ namespace rt.Devices.RsScale
 
             byte[] coinRollDataCommand = { 0xca, (byte)currencyIndex, (byte)(denominationIndex + 1), 0xaa, 0x55, 0xaa };
             var receiveBuffer = await SendPacketAsync(coinRollDataCommand, timeout);
-            
-            var weight = Convert.ToDouble(BitConverter.ToUInt16(new byte[] { receiveBuffer[5], receiveBuffer[4] }, 0)) * Math.Pow(10, -4);
+            var weight = Convert.ToDouble(BitConverter.ToUInt16(new byte[] { receiveBuffer[5], receiveBuffer[4] }, 0)) * Math.Pow(10, -1);
             var result = new CoinRollData { Quantity = receiveBuffer[3], PaperWeight = weight };
-            
+
             return result;
         }
 
@@ -1154,7 +1179,7 @@ namespace rt.Devices.RsScale
         /// <param name="timeout">milliseconds</param>
         /// <returns></returns>
         public CoinRollData GetCoinRollData(int currencyIndex, int denominationIndex, int timeout) => GetCoinRollDataAsync(currencyIndex, denominationIndex, timeout).RunTaskSynchronously();
-        
+
         /// <summary>
         /// Gets the scale protocol version
         /// </summary>
