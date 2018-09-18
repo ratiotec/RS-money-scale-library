@@ -1055,6 +1055,71 @@ namespace rt.Devices.RsScale
         public void SetDefaultCurrency(int currencyIndex, int timeout) => SetDefaultCurrencyAsync(currencyIndex, timeout).RunTaskSynchronously();
 
         /// <summary>
+        /// Gets the current user id (RS 2000 devices only)
+        /// </summary>
+        /// <returns></returns>
+        public async Task<int> GetUserIdAsync() => await GetUserIdAsync(Timeout);
+
+        /// <summary>
+        /// Gets the current user id (RS 2000 devices only)
+        /// </summary>
+        /// <param name="timeout">milliseconds</param>
+        /// <returns></returns>
+        public async Task<int> GetUserIdAsync(int timeout)
+        {
+            var userIdCommand = new byte[] { 0xc4, 0xaa, 0x55, 0xaa, 0x55, 0xaa };
+            var receiveBuffer = await SendPacketAsync(userIdCommand, timeout);
+
+            if (receiveBuffer.Length == 0)
+                return -1;
+
+            return receiveBuffer[1];
+        }
+
+        /// <summary>
+        /// Gets the current user id (RS 2000 devices only)
+        /// </summary>
+        /// <returns></returns>
+        public int GetUserId() => GetUserId(Timeout);
+
+        /// <summary>
+        /// Gets the current user id (RS 2000 devices only)
+        /// </summary>
+        /// <param name="timeout">milliseconds</param>
+        /// <returns></returns>
+        public int GetUserId(int timeout) => GetUserIdAsync(timeout).RunTaskSynchronously();
+
+        /// <summary>
+        /// Sets the current user id. The device will be reseted to user 0 if a parameter was given outside valid range. (RS 2000 devices only)
+        /// </summary>
+        /// <param name="userId">The new user id</param>
+        /// <returns></returns>
+        public async Task SetUserIdAsync(uint userId) => await SetUserIdAsync(userId, Timeout);
+
+        /// <summary>
+        /// Sets the current user id. The device will be reseted to user 0 if a parameter was given outside valid range. (RS 2000 devices only)
+        /// </summary>
+        /// <param name="userId">The new user id</param>
+        /// <returns></returns>
+        public async Task SetUserIdAsync(uint userId, int timeout)
+        {
+            var userIdCommand = new byte[] { 0xc3, (byte)userId, 0x55, 0xaa, 0x55, 0xaa };
+            await SendPacketAsync(userIdCommand, timeout);
+        }
+
+        /// <summary>
+        /// Sets the current user id. The device will be reseted to user 0 if a parameter was given outside valid range. (RS 2000 devices only)
+        /// </summary>
+        /// <param name="userId">The new user id</param>
+        public void SetUserId(uint userId) => SetUserId(userId, Timeout);
+
+        /// <summary>
+        /// Sets the current user id. The device will be reseted to user 0 if a parameter was given outside valid range. (RS 2000 devices only)
+        /// </summary>
+        /// <param name="userId">The new user id</param>
+        public void SetUserId(uint userId, int timeout) => SetUserIdAsync(userId, timeout).RunTaskSynchronously();
+
+        /// <summary>
         /// Load the factory default settings.
         /// </summary>
         /// <returns></returns>
